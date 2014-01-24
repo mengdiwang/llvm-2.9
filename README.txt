@@ -17,4 +17,4 @@ suggestions.
 INSTALL
 =======
 ./configure --enable-optimized --enable-assertions --enable-expensive-checks
-make
+CXXFLAGS+="-fexceptions" make
