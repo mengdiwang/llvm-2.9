@@ -376,7 +376,7 @@ using namespace boost;
     void CEPass::getDefectList(std::string docname, defectList *res)
     {
         DEBUG(errs() << "Open defect file " << docname << "\n");
-        std::ifstream fin(docname, std::ifstream::in);
+        std::ifstream fin(docname.c_str());//, std::ifstream::in);
         std::string fname="";
         std::vector<unsigned> lineList;
         while(!fin.eof())
