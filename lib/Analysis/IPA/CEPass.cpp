@@ -56,14 +56,16 @@ using namespace boost;
 //namespace
 //{
 	
-	ModulePass *llvm::createCEPass(std::vector<std::vector<BasicBlock*> > *_bbpaths, std::string _filename)
+	ModulePass *llvm::createCEPass(std::vector<std::vector<TCeItem> > *_bbpaths, std::string _filename)
 	{
 	    CEPass *ce = new CEPass();
 	    ce->bbpaths = _bbpaths;
 	    ce->defectFile = _filename;
 	    return ce;
 	}
-    
+
+//    CEPass::CEPass():ModulePass(&ID),bbpaths(NULL){}
+
     char CEPass::ID = 0;
     
     static RegisterPass<CEPass> X("cefinder", "Critical Edge finder psss", false, false);
@@ -177,7 +179,7 @@ using namespace boost;
             //? 最短路上的branch block是否就是关键边？
             findCEofBBPathList(bbpath, tBB, ceList);
             CEMap.insert(std::make_pair(std::make_pair(file, line), ceList));
-            
+            bbpaths->push_back(ceList);
             //~
             //intraprocedural
             
@@ -219,6 +221,7 @@ using namespace boost;
                 ceList.insert(ceList.end(), tmpcelist.begin(), tmpcelist.end());
             }
             CEMap.insert(std::make_pair(std::make_pair(file, line), ceList));
+            bbpaths->push_back(ceList);
 #endif
         }
         
@@ -551,8 +554,8 @@ using namespace boost;
                 }
                 else if(!bbset.count(trueBB) && bbset.count(falseBB))//false choice is CE
                 {
-                    std::string funcName = trueBB->getParent()->getName().str();
-                    int funcId = trueBB->getParent()->getIntrinsicID();
+                    std::string funcName = falseBB->getParent()->getName().str();
+                    int funcId = falseBB->getParent()->getIntrinsicID();
 //                    std::string cristmtid = brInst->getName().str();
                     int cristmtLine = getInstInfo(brInst).first;
                     

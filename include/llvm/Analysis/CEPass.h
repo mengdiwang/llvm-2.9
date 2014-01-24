@@ -17,17 +17,7 @@
 using namespace boost;
 
 namespace llvm {
-	
-    typedef std::map<std::string, std::vector<unsigned> > defectList;
-    typedef adjacency_list<setS, vecS, bidirectionalS, no_property,
-    property<edge_weight_t, int> > Graph;
-    typedef graph_traits<Graph>::vertex_descriptor Vertex;
-    typedef graph_traits<Graph>::edge_descriptor Edge;
-    typedef color_traits<default_color_type> Color;
-    typedef std::vector<default_color_type> ColorVec;
     
-	ModulePass *createCEPass(std::vector<std::vector<BasicBlock*> > *_bbpaths, std::string _filename);
-	
     struct TCeItem
     {
         TCeItem(std::string _funname, int _funId, Instruction *_criStmtStr, int _criStmtBranch, int _criLine):funName(_funname),funId(_funId),criStmtStr(_criStmtStr),criStmtBranch(_criStmtBranch),criLine(_criLine)
@@ -41,6 +31,17 @@ namespace llvm {
         int criStmtBranch; // 0 is true choice , 1 is false choice
         int criLine;
     };//end of struct TCeItem
+    
+    typedef std::map<std::string, std::vector<unsigned> > defectList;
+    typedef adjacency_list<setS, vecS, bidirectionalS, no_property,
+    property<edge_weight_t, int> > Graph;
+    typedef graph_traits<Graph>::vertex_descriptor Vertex;
+    typedef graph_traits<Graph>::edge_descriptor Edge;
+    typedef color_traits<default_color_type> Color;
+    typedef std::vector<default_color_type> ColorVec;
+    
+	ModulePass *createCEPass(std::vector<std::vector<TCeItem> > *_bbpaths, std::string _filename);
+	
     
     bool CompareByLine(const TCeItem &a, const TCeItem &b)
     {
@@ -58,7 +59,7 @@ namespace llvm {
     class CEPass:public ModulePass
     {
     public:
-        CEPass():ModulePass(ID){}
+        CEPass():ModulePass(ID),bbpaths(NULL){}
         
         virtual void getAnalysisUsage(AnalysisUsage &AU) const { //important
             AU.addRequired<CallGraph>();
@@ -70,7 +71,8 @@ namespace llvm {
 
         static char ID;
         
-        std::vector<std::vector<BasicBlock*> > *bbpaths;
+//        std::vector<std::vector<BasicBlock*> > *bbpaths;
+        std::vector<std::vector<TCeItem> > *bbpaths;
         
         std::string defectFile;
         
