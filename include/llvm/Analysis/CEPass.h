@@ -46,10 +46,6 @@ namespace llvm {
 	ModulePass *createCEPass(std::vector<std::vector<TCeItem> > *_bbpaths, std::string _filename);
 	
     
-    bool CompareByLine(const TCeItem &a, const TCeItem &b)
-    {
-        return a.criLine < b.criLine;
-    }
     
     typedef std::vector<TCeItem> TceList;
     typedef std::pair<std::string, int> TtargetPair;

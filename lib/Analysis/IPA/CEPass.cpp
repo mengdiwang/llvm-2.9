@@ -56,7 +56,12 @@ using namespace boost;
 
 //namespace
 //{
-	
+bool CompareByLine(const TCeItem &a, const TCeItem &b)
+{
+    return a.criLine < b.criLine;
+}
+
+
 	ModulePass *llvm::createCEPass(std::vector<std::vector<TCeItem> > *_bbpaths, std::string _filename)
 	{
 	    CEPass *ce = new CEPass();
