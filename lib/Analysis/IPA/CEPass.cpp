@@ -242,7 +242,7 @@ using namespace boost;
             {
                 Function *F = it->first;
                 if(F!=NULL)
-                    res = it->first->getNameStr();
+                    res = it->first->getName();
             }
         }
         return res;
@@ -535,7 +535,7 @@ using namespace boost;
                 BasicBlock *trueBB = brInst->getSuccessor(0);//true destionation
                 BasicBlock *falseBB = brInst->getSuccessor(1);//false destination
 
-                DEBUG(errs()<< "brInst:" <<brInst <<" " <<brInst->getNameStr() << " line:" << getInstInfo(brInst).first << "\n");
+                DEBUG(errs()<< "brInst:" <<brInst <<" " <<brInst->getName() << " line:" << getInstInfo(brInst).first << "\n");
                 
                 if(bbset.count(trueBB) && !bbset.count(falseBB))//true choice is CE
                 {
@@ -627,7 +627,7 @@ using namespace boost;
         for(Module::iterator fit = M->begin(); fit!=M->end(); ++fit)
         {
             Function *F = fit;
-            DEBUG(errs() << "Enter caller:" << F->getNameStr() << "\n");
+            DEBUG(errs() << "Enter caller:" << F->getName() << "\n");
 //            if(F->isDeclaration()) //wmd obmit the declaration part
 //                continue;
             
@@ -659,7 +659,7 @@ using namespace boost;
                 
                 if(tF->empty())
                     continue;
-                DEBUG(errs() << "Enter " << tF->getNameStr() << "\n");
+                DEBUG(errs() << "Enter " << tF->getName() << "\n");
                 Instruction *myI = dyn_cast<Instruction>(cit->first);
                 DEBUG(errs() << "Call Instruction at line " << getInstInfo(myI).first << "\n");
                 BasicBlock *callerBB = myI->getParent();//caller block
