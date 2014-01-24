@@ -1,0 +1,32 @@
+digraph G {
+0[label="initialize"];
+1[label="ALIM"];
+2[label="Inhibit_Biased_Climb"];
+3[label="Non_Crossing_Biased_Climb"];
+4[label="llvm.dbg.declare"];
+5[label="Non_Crossing_Biased_Descend"];
+6[label="Own_Below_Threat"];
+7[label="Own_Above_Threat"];
+8[label="alt_sep_test"];
+9[label="main"];
+10[label="fprintf"];
+11[label="exit"];
+12[label="atoi"];
+3->2 ;
+3->6 ;
+3->1 ;
+3->7 ;
+5->2 ;
+5->6 ;
+5->1 ;
+5->7 ;
+8->3 ;
+8->6 ;
+8->5 ;
+8->7 ;
+9->10 ;
+9->11 ;
+9->0 ;
+9->12 ;
+9->8 ;
+}
