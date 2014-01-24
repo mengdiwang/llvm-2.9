@@ -1,3 +1,4 @@
+//export CXXFLAGS="-I /usr/include/libxml2 -fexceptions"
 //
 //  CriticalEdge.cpp
 //  EditLLvmPass
@@ -375,7 +376,7 @@ using namespace boost;
     void CEPass::getDefectList(std::string docname, defectList *res)
     {
         DEBUG(errs() << "Open defect file " << docname << "\n");
-        std::ifstream fin(docname);
+        std::ifstream fin(docname.c_str());
         std::string fname="";
         std::vector<unsigned> lineList;
         while(!fin.eof())
