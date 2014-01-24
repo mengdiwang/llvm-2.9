@@ -7,6 +7,9 @@
 #include "llvm/Function.h"
 #include "llvm/Analysis/CallGraph.h"
 
+#include "llvm/Support/CommandLine.h"
+#include "llvm/Support/raw_ostream.h"
+
 #include <boost/config.hpp>
 #include <boost/utility.hpp>
 #include <boost/graph/adjacency_list.hpp>
