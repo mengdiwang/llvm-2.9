@@ -3,7 +3,7 @@
 //  EditLLvmPass
 //
 //  Created by Mengdi Wang on 14-1-14.
-//  Copyright (c) 2014年 wmd. All rights reserved.
+//  Copyright (c) 2014 wmd. All rights reserved.
 //
 
 //#define __STDC_CONSTANT_MACROS
@@ -54,13 +54,13 @@ using namespace boost;
 #define BLOCKSHORTEST 
 
 static cl::opt<std::string>
-    DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
+DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
              cl::value_desc("filename"), cl::desc("Block dump file from -cefinder"));
 
 //namespace
 //{
 	
-  bool CompareByLine(const TCeItem &a, const TCeItem &b)
+	bool CompareByLine(const TCeItem &a, const TCeItem &b)
     {
         return a.criLine < b.criLine;
     }
