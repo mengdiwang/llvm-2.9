@@ -6,7 +6,8 @@
 #include "llvm/BasicBlock.h"
 #include "llvm/Function.h"
 #include "llvm/Analysis/CallGraph.h"
-
+#include "llvm/Support/CommandLine.h"
+#include "llvm/Support/raw_ostream.h"
 #include <boost/config.hpp>
 #include <boost/utility.hpp>
 #include <boost/graph/adjacency_list.hpp>
@@ -43,19 +44,13 @@ namespace llvm {
 	ModulePass *createCEPass(std::vector<std::vector<TCeItem> > *_bbpaths, std::string _filename);
 	
     
-    bool CompareByLine(const TCeItem &a, const TCeItem &b)
-    {
-        return a.criLine < b.criLine;
-    }
+  
     
     typedef std::vector<TCeItem> TceList;
     typedef std::pair<std::string, int> TtargetPair;
     typedef std::map<TtargetPair, TceList> TceListMap;
     
-    static cl::opt<std::string>
-    DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
-             cl::value_desc("filename"), cl::desc("Block dump file from -cefinder"));
-    
+
     class CEPass:public ModulePass
     {
     public:

@@ -53,9 +53,18 @@ using namespace boost;
 
 #define BLOCKSHORTEST 
 
+static cl::opt<std::string>
+    DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
+             cl::value_desc("filename"), cl::desc("Block dump file from -cefinder"));
+
 //namespace
 //{
 	
+  bool CompareByLine(const TCeItem &a, const TCeItem &b)
+    {
+        return a.criLine < b.criLine;
+    }
+
 	ModulePass *llvm::createCEPass(std::vector<std::vector<TCeItem> > *_bbpaths, std::string _filename)
 	{
 	    CEPass *ce = new CEPass();
@@ -241,7 +250,7 @@ using namespace boost;
             {
                 Function *F = it->first;
                 if(F!=NULL)
-                    res = it->first->getNameStr();
+                    res = it->first->getName();
             }
         }
         return res;
@@ -375,7 +384,7 @@ using namespace boost;
     void CEPass::getDefectList(std::string docname, defectList *res)
     {
         DEBUG(errs() << "Open defect file " << docname << "\n");
-        std::ifstream fin(docname);
+        std::ifstream fin(docname.c_str());
         std::string fname="";
         std::vector<unsigned> lineList;
         while(!fin.eof())
@@ -534,7 +543,7 @@ using namespace boost;
                 BasicBlock *trueBB = brInst->getSuccessor(0);//true destionation
                 BasicBlock *falseBB = brInst->getSuccessor(1);//false destination
 
-                DEBUG(errs()<< "brInst:" <<brInst <<" " <<brInst->getNameStr() << " line:" << getInstInfo(brInst).first << "\n");
+                DEBUG(errs()<< "brInst:" <<brInst <<" " <<brInst->getName() << " line:" << getInstInfo(brInst).first << "\n");
                 
                 if(bbset.count(trueBB) && !bbset.count(falseBB))//true choice is CE
                 {
@@ -626,7 +635,7 @@ using namespace boost;
         for(Module::iterator fit = M->begin(); fit!=M->end(); ++fit)
         {
             Function *F = fit;
-            DEBUG(errs() << "Enter caller:" << F->getNameStr() << "\n");
+            DEBUG(errs() << "Enter caller:" << F->getName() << "\n");
 //            if(F->isDeclaration()) //wmd obmit the declaration part
 //                continue;
             
@@ -658,7 +667,7 @@ using namespace boost;
                 
                 if(tF->empty())
                     continue;
-                DEBUG(errs() << "Enter " << tF->getNameStr() << "\n");
+                DEBUG(errs() << "Enter " << tF->getName() << "\n");
                 Instruction *myI = dyn_cast<Instruction>(cit->first);
                 DEBUG(errs() << "Call Instruction at line " << getInstInfo(myI).first << "\n");
                 BasicBlock *callerBB = myI->getParent();//caller block
