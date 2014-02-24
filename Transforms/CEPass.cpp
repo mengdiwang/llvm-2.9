@@ -3,12 +3,11 @@
 //  EditLLvmPass
 //
 //  Created by Mengdi Wang on 14-1-14.
-//  Copyright (c) 2014 wmd. All rights reserved.
+//  Copyright (c) 2014年 wmd. All rights reserved.
 //
 
 //#define __STDC_CONSTANT_MACROS
 //#define __STDC_LIMIT_MACROS
-
 
 
 #include "llvm/ADT/ArrayRef.h"
@@ -30,7 +29,6 @@
 #include "llvm/Support/CFG.h"
 #include "llvm/Analysis/CallGraph.h"
 #include "llvm/Support/InstIterator.h"
-#include "llvm/Analysis/CEPass.h"
 #include <vector>
 #include <string>
 #include <map>
@@ -53,28 +51,131 @@ using namespace boost;
 
 #define BLOCKSHORTEST 
 
-static cl::opt<std::string>
-DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
-             cl::value_desc("filename"), cl::desc("Block dump file from -cefinder"));
-
-//namespace
-//{
+namespace
+{
 	
-	bool CompareByLine(const TCeItem &a, const TCeItem &b)
+    typedef std::map<std::string, std::vector<unsigned> > defectList;
+    typedef adjacency_list<setS, vecS, bidirectionalS, no_property,
+    property<edge_weight_t, int> > Graph;
+    typedef graph_traits<Graph>::vertex_descriptor Vertex;
+    typedef graph_traits<Graph>::edge_descriptor Edge;
+    typedef color_traits<default_color_type> Color;
+    typedef std::vector<default_color_type> ColorVec;
+    
+    struct TCeItem
+    {
+        TCeItem(std::string _funname, int _funId, Instruction *_criStmtStr, int _criStmtBranch, int _criLine):funName(_funname),funId(_funId),criStmtStr(_criStmtStr),criStmtBranch(_criStmtBranch),criLine(_criLine)
+        {
+        }
+        
+        std::string funName;
+        int funId;
+        //	int criStmtId;
+        Instruction *criStmtStr;
+        int criStmtBranch; // 0 is true choice , 1 is false choice
+        int criLine;
+    };//end of struct TCeItem
+    
+    bool CompareByLine(const TCeItem &a, const TCeItem &b)
     {
         return a.criLine < b.criLine;
     }
+    
+    typedef std::vector<TCeItem> TceList;
+    typedef std::pair<std::string, int> TtargetPair;
+    typedef std::map<TtargetPair, TceList> TceListMap;
+    
+    static cl::opt<std::string>
+    DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
+             cl::value_desc("filename"), cl::desc("Block dump file from -cefinder"));
+    
+    class CEPass:public ModulePass
+    {
+    public:
+        CEPass():ModulePass(ID){}
+        
+        virtual void getAnalysisUsage(AnalysisUsage &AU) const { //important
+            AU.addRequired<CallGraph>();
+            AU.setPreservesCFG();
+            AU.setPreservesAll();
+        }
+        
+        virtual bool runOnModule(Module &_M);
 
-	ModulePass *llvm::createCEPass(std::vector<std::vector<TCeItem> > *_bbpaths, std::string _filename)
-	{
-	    CEPass *ce = new CEPass();
-	    ce->bbpaths = _bbpaths;
-	    ce->defectFile = _filename;
-	    return ce;
-	}
+        static char ID;
+        
+        std::vector<std::vector<BasicBlock*> > *bbpaths;
+        
+        std::string defectFile;
+        
+        std::vector<TCeItem> *CeList;
+        
+        Module *M;
+        
+    private:
+        typedef std::map<std::string, std::vector<unsigned> > defectList;
+        typedef std::map<TtargetPair, TceList> TceListMap;
+        
+        defectList dl;
+        TceListMap CEMap;
+        
+        void getDefectList(std::string docname, defectList *res);
+        
+        Function *getFunction(std::string srcFile, unsigned srcLine, BasicBlock **BB);
+        Function *getFunction(Vertex v);
+        BasicBlock *getBB(std::string srcFile, unsigned srcLine);
+        BasicBlock *getBB(Vertex v);
+        bool findLineInFunction(Function *F, BasicBlock **BB, std::string srcFile, unsigned srcLine);
+        bool findLineInBB(BasicBlock *BB, std::string srcFile, unsigned srcLine);
+        void findCEofSingleBB(BasicBlock *BB, TceList &ceList);
+        void findCEofBBPathList(std::vector<BasicBlock *> &blist, BasicBlock *tBB, TceList &ceList);
+        
+        void OutputMap(raw_fd_ostream &file, TceListMap &map);
+        std::pair<unsigned, StringRef> getInstInfo(Instruction *I);
+        int getBlockTerminLineNo(BasicBlock *BB);
+        void PrintDBG(Function *F);
+        
+        //--------------Function call map ---------------------
+    private:
+        Graph funcG, bbG;
+        std::map<Function*, Vertex> funcMap;   // Map functions to vertices
+        std::map<BasicBlock*, Vertex> bbMap;
+        std::map<std::pair<Function*, Function*>, std::vector<BasicBlock*> > CallBlockMap; // caller bb map<pair<caller, callee> ,BasicBlock>
+        std::set<BasicBlock *> isCallsite;
+        
+        void findSinglePath(std::vector<Vertex> *path, Vertex root, Vertex target, Graph &graph);
 
-//    CEPass::CEPass():ModulePass(&ID),bbpaths(NULL){}
-
+        void buildGraph(CallGraph *CG);
+        void addBBEdges(BasicBlock *BB);
+        std::string getName(Vertex v);
+        std::string getBBName(Vertex v);
+        void PrintDotGraph();
+        
+    private:
+        struct my_func_label_writer
+        {
+            CEPass *CEP;
+            my_func_label_writer(CEPass *_CEP):CEP(_CEP){}
+            template<class VertexOrEdge>
+            void operator()(std::ostream &out, const VertexOrEdge &v) const
+            {
+                out << "[label=\"" << CEP->getName(v) << "\"]";
+            }
+        };
+        
+        struct my_bb_label_writer
+        {
+            CEPass *CEP;
+            my_bb_label_writer(CEPass *_CEP):CEP(_CEP){}
+            template<class VertexOrEdge>
+            void operator()(std::ostream &out, const VertexOrEdge &v) const
+            {
+                out << "[label=\"" << CEP->getBBName(v) << "\"]";
+            }
+        };
+        
+    };//end of Pass CEPass
+    
     char CEPass::ID = 0;
     
     static RegisterPass<CEPass> X("cefinder", "Critical Edge finder psss", false, false);
@@ -188,7 +289,7 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
             //? 最短路上的branch block是否就是关键边？
             findCEofBBPathList(bbpath, tBB, ceList);
             CEMap.insert(std::make_pair(std::make_pair(file, line), ceList));
-            bbpaths->push_back(ceList);
+            
             //~
             //intraprocedural
             
@@ -230,7 +331,6 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
                 ceList.insert(ceList.end(), tmpcelist.begin(), tmpcelist.end());
             }
             CEMap.insert(std::make_pair(std::make_pair(file, line), ceList));
-            bbpaths->push_back(ceList);
 #endif
         }
         
@@ -250,7 +350,7 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
             {
                 Function *F = it->first;
                 if(F!=NULL)
-                    res = it->first->getName();
+                    res = it->first->getNameStr();
             }
         }
         return res;
@@ -384,7 +484,7 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
     void CEPass::getDefectList(std::string docname, defectList *res)
     {
         DEBUG(errs() << "Open defect file " << docname << "\n");
-        std::ifstream fin(docname.c_str());
+        std::ifstream fin(docname);
         std::string fname="";
         std::vector<unsigned> lineList;
         while(!fin.eof())
@@ -543,7 +643,7 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
                 BasicBlock *trueBB = brInst->getSuccessor(0);//true destionation
                 BasicBlock *falseBB = brInst->getSuccessor(1);//false destination
 
-                DEBUG(errs()<< "brInst:" <<brInst <<" " <<brInst->getName() << " line:" << getInstInfo(brInst).first << "\n");
+                DEBUG(errs()<< "brInst:" <<brInst <<" " <<brInst->getNameStr() << " line:" << getInstInfo(brInst).first << "\n");
                 
                 if(bbset.count(trueBB) && !bbset.count(falseBB))//true choice is CE
                 {
@@ -563,8 +663,8 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
                 }
                 else if(!bbset.count(trueBB) && bbset.count(falseBB))//false choice is CE
                 {
-                    std::string funcName = falseBB->getParent()->getName().str();
-                    int funcId = falseBB->getParent()->getIntrinsicID();
+                    std::string funcName = trueBB->getParent()->getName().str();
+                    int funcId = trueBB->getParent()->getIntrinsicID();
 //                    std::string cristmtid = brInst->getName().str();
                     int cristmtLine = getInstInfo(brInst).first;
                     
@@ -635,7 +735,7 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
         for(Module::iterator fit = M->begin(); fit!=M->end(); ++fit)
         {
             Function *F = fit;
-            DEBUG(errs() << "Enter caller:" << F->getName() << "\n");
+            DEBUG(errs() << "Enter caller:" << F->getNameStr() << "\n");
 //            if(F->isDeclaration()) //wmd obmit the declaration part
 //                continue;
             
@@ -667,7 +767,7 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
                 
                 if(tF->empty())
                     continue;
-                DEBUG(errs() << "Enter " << tF->getName() << "\n");
+                DEBUG(errs() << "Enter " << tF->getNameStr() << "\n");
                 Instruction *myI = dyn_cast<Instruction>(cit->first);
                 DEBUG(errs() << "Call Instruction at line " << getInstInfo(myI).first << "\n");
                 BasicBlock *callerBB = myI->getParent();//caller block
@@ -729,12 +829,12 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
             path->insert(path->begin(), root);
         
     }
-//}//end of anonymous namespace
+}//end of anonymous namespace
 
 
 #include <boost/graph/graphviz.hpp> //graphviz not compatitable with dijkstra
-//namespace llvm
-//{
+namespace
+{
 void CEPass::PrintDotGraph()
 {
     std::ofstream funcs_file("funcs.dot");
@@ -743,7 +843,7 @@ void CEPass::PrintDotGraph()
     std::ofstream bbs_file("blocks.dot");
     boost::write_graphviz(bbs_file, bbG, my_bb_label_writer(this));
 }
-//}
+}
     
     
 

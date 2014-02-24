@@ -46,7 +46,10 @@ namespace llvm {
 	ModulePass *createCEPass(std::vector<std::vector<TCeItem> > *_bbpaths, std::string _filename);
 	
     
+<<<<<<< HEAD
     
+=======
+>>>>>>> 9f9a6f2e734872ced19d24f3a5b10cec3106af89
     typedef std::vector<TCeItem> TceList;
     typedef std::pair<std::string, int> TtargetPair;
     typedef std::map<TtargetPair, TceList> TceListMap;
