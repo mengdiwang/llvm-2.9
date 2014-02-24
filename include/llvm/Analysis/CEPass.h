@@ -6,15 +6,10 @@
 #include "llvm/BasicBlock.h"
 #include "llvm/Function.h"
 #include "llvm/Analysis/CallGraph.h"
-<<<<<<< HEAD
-#include "llvm/Support/CommandLine.h"
-#include "llvm/Support/raw_ostream.h"
-=======
 
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/raw_ostream.h"
 
->>>>>>> 8031b519299888035118f7b00a2867d3fdd15b26
 #include <boost/config.hpp>
 #include <boost/utility.hpp>
 #include <boost/graph/adjacency_list.hpp>
@@ -51,10 +46,6 @@ namespace llvm {
 	ModulePass *createCEPass(std::vector<std::vector<TCeItem> > *_bbpaths, std::string _filename);
 	
     
-<<<<<<< HEAD
-  
-=======
->>>>>>> 8031b519299888035118f7b00a2867d3fdd15b26
     
     typedef std::vector<TCeItem> TceList;
     typedef std::pair<std::string, int> TtargetPair;

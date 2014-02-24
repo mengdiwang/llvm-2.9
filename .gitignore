@@ -36,8 +36,11 @@ projects/*
 # Clang, which is tracked independently.
 tools/clang
 Release+Asserts+Checks/
+Release+Asserts/
 Release/
+lib/Support/Release+Asserts/*.d
 
 *.ll
 *.o
 *.dylib
+*.d
