@@ -395,13 +395,13 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
         std::vector<unsigned> lineList;
         while(!fin.eof())
         {
-			std::string infname="";
+			std::string filename="";
 			unsigned lineno;
 
-            fin >> infname >> lineno;
-			if(infname.length() < 1)
+            fin >> filename >> lineno;
+			if(filename.length() < 1)
 				break;
-            errs() << "readin:" << infname << "\n";
+            errs() << "readin:" << filename << "\n";
             if(fname == "")
             {
                 fname = filename;
