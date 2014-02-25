@@ -350,11 +350,6 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
     
     bool CEPass::findLineInBB(BasicBlock *BB, std::string srcFile, unsigned srcLine)
     {
->>>>>>>>>>>>>>>>>>>> File 1
-		errs() << "in find Line InBB\n";
->>>>>>>>>>>>>>>>>>>> File 2
->>>>>>>>>>>>>>>>>>>> File 3
-<<<<<<<<<<<<<<<<<<<<
         for(BasicBlock::iterator it=BB->begin(); it!=BB->end(); ++it)
         {
             std::pair<unsigned, StringRef> p = getInstInfo(it);
