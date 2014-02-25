@@ -146,7 +146,7 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
         std::vector<unsigned> lines;
         std::vector<BasicBlock *> callsiteblocks;
 
-        for(defectList::iterator dit=dl.begin(); dit!=dl.end(); dit++)
+        for(defectList::iterator dit=dl.begin(); dit!=dl.end(); ++dit)
         {
             std::string file = dit->first;
             lines = dit->second;
@@ -154,7 +154,7 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
             ceList.clear();
             Function *F = NULL;
             unsigned line = 0;
-            for(std::vector<unsigned>::iterator lit=lines.begin(); lit!=lines.end(); lit++)
+            for(std::vector<unsigned>::iterator lit=lines.begin(); lit!=lines.end(); ++lit)
             {
                 errs() << "Looking for '" << file << "' (" << *lit << ")\n";
                 if((F = getFunction(file, *lit, &tBB)) != NULL)
@@ -178,7 +178,7 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
             
             //get all the blocks in the shortest path
             BasicBlock *tmpb = NULL;
-            for(std::vector<Vertex>::iterator it=path.begin(); it!=path.end(); it++)
+            for(std::vector<Vertex>::iterator it=path.begin(); it!=path.end(); ++it)
             {
                 tmpb = getBB(*it);
                 if(tmpb != NULL) bbpath.push_back(tmpb);
@@ -387,10 +387,11 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
         std::ifstream fin(docname.c_str());
         std::string fname="";
         std::vector<unsigned> lineList;
+		std::string filename;
+		unsigned lineno;
         while(!fin.eof())
         {
-            std::string filename;
-            unsigned lineno;
+
             
             fin >> filename >> lineno;
             
