@@ -170,7 +170,7 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
                 }
             }
             
-            if(F==NULL || tBB==NULL || line==0)
+            if(F==NULL || tBB==NULL)
                 continue;
 #ifdef BLOCKSHORTEST
             DEBUG(errs() << "inter-Blocks Dijkstra\n");
