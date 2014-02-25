@@ -67,9 +67,11 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
 
 	ModulePass *llvm::createCEPass(std::vector<std::vector<TCeItem> > *_bbpaths, std::string _filename)
 	{
+		
 	    CEPass *ce = new CEPass();
-	    ce->bbpaths = _bbpaths;
-	    ce->defectFile = _filename;
+		//_bbpaths is the pointer of bbpaths, bbpaths is initialized from caller
+	    ce->bbpaths = _bbpaths;		
+		ce->defectFile = _filename;
 	    return ce;
 	}
 
@@ -111,8 +113,9 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
     
     //\brief main entry of the Module pass
     bool CEPass::runOnModule(Module &_M)
-    {
-        defectFile = "defectFile.txt";
+    {	
+		if(defectFile == "")
+        	defectFile = "defectFile.txt";
         errs() << "CEFinder started\n";
         std::string ErrorInfo;
         raw_fd_ostream file(DumpFile.c_str(), ErrorInfo);
@@ -123,6 +126,10 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
         }
         
         M = &_M;
+
+
+		if(bbpaths == NULL)
+			bbpaths = new std::vector<std::vector<TCeItem> >();
 
         CallGraph *CG = &getAnalysis<CallGraph>();
         CallGraphNode *root = CG->getRoot();
@@ -138,7 +145,6 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
         
         buildGraph(CG);
         
-        
         TceList ceList;
         std::vector<Vertex> path;
         std::vector<BasicBlock *> bbpath;
@@ -146,7 +152,7 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
         std::vector<unsigned> lines;
         std::vector<BasicBlock *> callsiteblocks;
 
-        for(defectList::iterator dit=dl.begin(); dit!=dl.end(); dit++)
+        for(defectList::iterator dit=dl.begin(); dit!=dl.end(); ++dit)
         {
             std::string file = dit->first;
             lines = dit->second;
@@ -154,20 +160,22 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
             ceList.clear();
             Function *F = NULL;
             unsigned line = 0;
-            for(std::vector<unsigned>::iterator lit=lines.begin(); lit!=lines.end(); lit++)
+            for(std::vector<unsigned>::iterator lit=lines.begin(); lit!=lines.end(); ++lit)
             {
                 errs() << "Looking for '" << file << "' (" << *lit << ")\n";
                 if((F = getFunction(file, *lit, &tBB)) != NULL)
                 {
+					errs() << "got it\n";
                     line = *lit;
                     break;
                 }
             }
             
-            if(F==NULL || tBB==NULL || line==0)
-                continue;
+			errs() << "break out \n";
+            //if(F==NULL || tBB==NULL || line==0)
+            //    continue;
 #ifdef BLOCKSHORTEST
-            DEBUG(errs() << "inter-Blocks Dijkstra\n");
+            /*DEBUG*/(errs() << "inter-Blocks Dijkstra\n");
             //interprocedural
             Vertex rootv = bbMap[rootBB];
             Vertex targetv = bbMap[tBB];
@@ -175,20 +183,25 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
             bbpath.clear();
             
             findSinglePath(&path, rootv, targetv, bbG);
-            
+            errs() << "find single path\n";
             //get all the blocks in the shortest path
             BasicBlock *tmpb = NULL;
-            for(std::vector<Vertex>::iterator it=path.begin(); it!=path.end(); it++)
+            for(std::vector<Vertex>::iterator it=path.begin(); it!=path.end(); ++it)
             {
                 tmpb = getBB(*it);
                 if(tmpb != NULL) bbpath.push_back(tmpb);
-                DEBUG(errs() << "output path:");
-                DEBUG(errs() << "\tblocks terminatal line at " << getBlockTerminLineNo(tmpb) << "\n");
+                /*DEBUG*/(errs() << "output path:");
+                /*DEBUG*/(errs() << "\tblocks terminatal line at " << getBlockTerminLineNo(tmpb) << "\n");
             }
             //? 最短路上的branch block是否就是关键边？
+			errs() << "1\n";
             findCEofBBPathList(bbpath, tBB, ceList);
-            CEMap.insert(std::make_pair(std::make_pair(file, line), ceList));
-            bbpaths->push_back(ceList);
+         	errs() << "2\n";
+		   	CEMap.insert(std::make_pair(std::make_pair(file, line), ceList));
+			errs() << "3\n";
+			
+			bbpaths->push_back(ceList);
+			errs() << "4\n";
             //~
             //intraprocedural
             
@@ -287,6 +300,7 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
     
     Function *CEPass::getFunction(Vertex v)
     {
+		
         for(std::map<Function *, Vertex>::iterator it=funcMap.begin(); it!=funcMap.end(); ++it)
         {
             if(v == it->second)
@@ -344,13 +358,14 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
     
     bool CEPass::findLineInBB(BasicBlock *BB, std::string srcFile, unsigned srcLine)
     {
+		errs() << "in find Line InBB\n";
         for(BasicBlock::iterator it=BB->begin(); it!=BB->end(); ++it)
         {
             std::pair<unsigned, StringRef> p = getInstInfo(it);
-            
+            errs() << "get inst info\n";
             if((p.first==srcLine) && (p.second.str()==srcFile))
             {
-                DEBUG(errs() << "find the target\n");
+                errs() << "find the target\n";
                 return true;
             }
         }
@@ -359,6 +374,7 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
     
     bool CEPass::findLineInFunction(Function *F, BasicBlock **BB, std::string srcFile, unsigned srcLine)
     {
+		errs() << "in findLineInFunction\n";
         for(Function::iterator bbit = F->begin(); bbit != F->end(); ++bbit)
         {
             *BB = bbit;
@@ -372,6 +388,7 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
     
     Function *CEPass::getFunction(std::string srcFile, unsigned srcLine, BasicBlock **BB )
     {
+		errs() << "in get function\n";
         for(Module::iterator fit=M->begin(); fit!=M->end(); ++fit)
         {
             if(findLineInFunction(fit, BB, srcFile, srcLine))
@@ -389,21 +406,26 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
         std::vector<unsigned> lineList;
         while(!fin.eof())
         {
-            std::string filename;
-            unsigned lineno;
-            
-            fin >> filename >> lineno;
-            
+			std::string infname="";
+			unsigned lineno;
+
+            fin >> infname >> lineno;
+			if(infname.length() < 1)
+				break;
+            errs() << "readin:" << infname << "\n";
             if(fname == "")
             {
-                fname = filename;
+				errs() << "assign\n";
+                fname = infname;
             }
             
-            if(fname != filename)
+            if(fname != infname)
             {
-                res->insert(std::make_pair(filename, lineList));
+				errs() << "insert:" << infname << "\n";
+            
+                res->insert(std::make_pair(infname, lineList));
                 lineList.clear();
-                fname = filename;
+                fname = infname;
             }
             
             lineList.push_back(lineno);
@@ -411,6 +433,7 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
         //tail add
         if(lineList.size()>0 && fname != "")
         {
+			errs() << "fname:" << fname << "\n";
             res->insert(std::make_pair(fname, lineList));
             lineList.clear();
         }
