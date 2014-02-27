@@ -111,6 +111,10 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
         //~
     }
     
+
+
+  return false;
+}
     //\brief main entry of the Module pass
     bool CEPass::runOnModule(Module &_M)
     {	
@@ -169,7 +173,7 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
                     break;
                 }
             }
-            
+			
             if(F==NULL || tBB==NULL)
                 continue;
 #ifdef BLOCKSHORTEST
@@ -356,7 +360,7 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
             
             if((p.first==srcLine) && (p.second.str()==srcFile))
             {
-                DEBUG(errs() << "find the target\n");
+                (errs() << "find the target\n");
                 return true;
             }
         }
@@ -380,9 +384,21 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
     {
         for(Module::iterator fit=M->begin(); fit!=M->end(); ++fit)
         {
-            if(findLineInFunction(fit, BB, srcFile, srcLine))
-                return fit;
-        }
+            //if(findLineInFunction(fit, BB, srcFile, srcLine))
+            //    return fit;
+			
+			for(inst_iterator it = inst_begin(fit), ie = inst_end(fit); it!=ie; ++it)
+			{
+				std::pair<unsigned, StringRef> p = getInstInfo(it);
+            
+				if((p.first==srcLine) && (p.second.str()==srcFile))
+				{
+					(errs() << "find the target\n");
+					*BB = it->parent();
+					return fit;
+				}
+			}	
+		}
         return NULL;
     }
     
