@@ -41,8 +41,8 @@ Release/
 lib/Support/Release+Asserts/*.d
 lib/Support/Release+Asserts/
 lib/Target/*/*.inc
-
 *.ll
 *.o
 *.dylib
 *.d
+*.png
