@@ -106,6 +106,8 @@ namespace llvm {
         std::map<std::pair<Function*, Function*>, std::vector<BasicBlock*> > CallBlockMap; // caller bb map<pair<caller, callee> ,BasicBlock>
         std::set<BasicBlock *> isCallsite;
         
+        std::map<std::pair<std::string, unsigned>, llvm::Instruction*> > InstMap;
+        
         void findSinglePath(std::vector<Vertex> *path, Vertex root, Vertex target, Graph &graph);
 
         void buildGraph(CallGraph *CG);
@@ -113,6 +115,7 @@ namespace llvm {
         std::string getName(Vertex v);
         std::string getBBName(Vertex v);
         void PrintDotGraph();
+        void BuildInstMap();
         
     private:
         struct my_func_label_writer

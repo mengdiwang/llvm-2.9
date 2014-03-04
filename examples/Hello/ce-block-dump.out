@@ -1,7 +1,0 @@
-[tcas.c](136):
-main 0 0x7ff952c253e8 1 148
-alt_sep_test 0 0x7ff952c21df8 0 124
-alt_sep_test 0 0x7ff952c222d8 1 124
-alt_sep_test 0 0x7ff952c23018 1 128
-alt_sep_test 0 0x7ff952c232b8 1 133
-alt_sep_test 0 0x7ff952c23558 0 135

@@ -59,7 +59,56 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
 
 //namespace
 //{
-	
+
+    static std::string getDSPIPath(DILocation Loc)
+    {
+        std::string dir = Loc.getDirectory();
+        std::string file = Loc.getFilename();
+    
+        if(dir.empty() || *file.begin() == '/')
+            return file;
+        else if (*dir.rbegin() == '/')
+            return dir+file;
+        else
+            return dir+"/"+file;
+    }
+
+    bool getInstructionDebugInfo(const llvm::Instruction *I, const std::string *&File, int &FileID, unsigned &Line)
+    {
+        if(MDNode *N = I->getMetadata("dbg"))
+        {
+            DILocation Loc(N);
+            File = Loc.getFilename();
+            Line = Loc.getLineNumber();
+            return true;
+        }
+        return false;
+    }
+
+    void CEPass::BuildInstMap()
+    {
+        for(Module::iterator fit=M->begin(); fit!=M->end(); ++fit)
+        {
+			for(inst_iterator it = inst_begin(fit), ie = inst_end(fit); it!=ie; ++it)
+			{
+                const std::string *initialFile = &dummyString;
+                unsigned initialLine = 0;
+                int initialID = -1;
+                
+                if(getInstructionDebugInfo(&*it, initialFile, initialID, initialLine))
+                    break;
+                
+				if((p.first==srcLine) && (p.second.str()==srcFile))
+				{
+					(errs() << "find the target\n");
+					*BB = it->parent();
+					return fit;
+				}
+			}
+		}
+    }
+
+
 	bool CompareByLine(const TCeItem &a, const TCeItem &b)
     {
         return a.criLine < b.criLine;
@@ -80,7 +129,8 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
     char CEPass::ID = 0;
     
     static RegisterPass<CEPass> X("cefinder", "Critical Edge finder psss", false, false);
-    
+
+/*
     void CEPass::PrintDBG(Function *F)
     {
         //debug
@@ -110,7 +160,7 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
         
         //~
     }
-    
+ */
     //\brief main entry of the Module pass
     bool CEPass::runOnModule(Module &_M)
     {	
@@ -169,7 +219,7 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
                     break;
                 }
             }
-            
+			
             if(F==NULL || tBB==NULL)
                 continue;
 #ifdef BLOCKSHORTEST
@@ -356,7 +406,7 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
             
             if((p.first==srcLine) && (p.second.str()==srcFile))
             {
-                DEBUG(errs() << "find the target\n");
+                (errs() << "find the target\n");
                 return true;
             }
         }
@@ -380,9 +430,21 @@ DumpFile("ce-dump-file", cl::init("ce-block-dump.out"), cl::Optional,
     {
         for(Module::iterator fit=M->begin(); fit!=M->end(); ++fit)
         {
-            if(findLineInFunction(fit, BB, srcFile, srcLine))
-                return fit;
-        }
+            //if(findLineInFunction(fit, BB, srcFile, srcLine))
+            //    return fit;
+			
+			for(inst_iterator it = inst_begin(fit), ie = inst_end(fit); it!=ie; ++it)
+			{
+				std::pair<unsigned, StringRef> p = getInstInfo(it);
+            
+				if((p.first==srcLine) && (p.second.str()==srcFile))
+				{
+					(errs() << "find the target\n");
+					*BB = it->parent();
+					return fit;
+				}
+			}	
+		}
         return NULL;
     }
     
