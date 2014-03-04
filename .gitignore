@@ -46,3 +46,4 @@ lib/Target/*/*.inc
 *.dylib
 *.d
 *.png
+examples/Hello/*.png
