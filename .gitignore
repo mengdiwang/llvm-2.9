@@ -39,6 +39,8 @@ Release+Asserts+Checks/
 Release+Asserts/
 Release/
 lib/Support/Release+Asserts/*.d
+lib/Support/Release+Asserts/
+lib/Target/*/*.inc
 
 *.ll
 *.o

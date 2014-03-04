@@ -50,7 +50,6 @@ namespace llvm {
     typedef std::vector<TCeItem> TceList;
     typedef std::pair<std::string, int> TtargetPair;
     typedef std::map<TtargetPair, TceList> TceListMap;
-    
 
     class CEPass:public ModulePass
     {
